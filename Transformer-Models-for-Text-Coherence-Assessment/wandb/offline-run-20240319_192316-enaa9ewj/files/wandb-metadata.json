@@ -1,0 +1,149 @@
+{
+    "os": "Linux-5.15.0-89-generic-x86_64-with-glibc2.31",
+    "python": "3.11.4",
+    "heartbeatAt": "2024-03-19T23:23:16.585331",
+    "startedAt": "2024-03-19T23:23:16.482157",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--inference",
+        "--arch",
+        "vanilla",
+        "--epochs",
+        "10",
+        "--gpus",
+        "2",
+        "--corpus",
+        "airbnb",
+        "--freeze_emb_layer",
+        "--online_mode",
+        "0",
+        "--task",
+        "sentence-score-prediction",
+        "--checkpoint_path",
+        "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/lightning_checkpoints/gcdc-All-vanilla-sentence-score-prediction-roberta-base/epoch=9-step=16000.ckpt"
+    ],
+    "state": "running",
+    "program": "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/main.py",
+    "codePathLocal": "main.py",
+    "codePath": "main.py",
+    "git": {
+        "remote": "https://github.com/tushar117/Transformer-Models-for-Text-Coherence-Assessment.git",
+        "commit": "6ef2b32c891b737fee1639990462fc6b27b57ee3"
+    },
+    "email": null,
+    "root": "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment",
+    "host": "ist-217-3495",
+    "username": "azikre",
+    "executable": "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/.venv/bin/python",
+    "cpu_count": 8,
+    "cpu_count_logical": 16,
+    "cpu_freq": {
+        "current": 3705.0899375,
+        "min": 800.0,
+        "max": 5000.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 1300.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        },
+        {
+            "current": 3600.0,
+            "min": 800.0,
+            "max": 5000.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 467.8895797729492,
+            "used": 413.8852729797363
+        }
+    },
+    "gpu": "NVIDIA GeForce RTX 2080",
+    "gpu_count": 2,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 2080",
+            "memory_total": 8589934592
+        },
+        {
+            "name": "NVIDIA GeForce RTX 2080",
+            "memory_total": 8589934592
+        }
+    ],
+    "memory": {
+        "total": 31.037948608398438
+    }
+}
