@@ -19,19 +19,19 @@ class preprocessing_utils:
         self.ner_categories = ner_categories
         
         if ner_categories not in {4,18}:
-            raise ValueError(f"No Tagger implemented for {categories = }!!!")
+            raise ValueError(f"No Tagger implemented for {ner_categories = }!!!")
         if ner_library not in {'stanza', 'flair'}:
             raise ValueError(f"No Tagger implemented for {ner_library = }!!!")
         
         if enable_ner:
             if ner_categories == 4:
                 if ner_library == 'stanza':
-                    self.tagger = stanza.Pipeline(lang='en', processors={'ner': 'CoNLL03'}, device='cuda:1')
+                    self.tagger = stanza.Pipeline(lang='en', processors={'ner': 'CoNLL03'}, device='cuda:0')
                 if ner_library == 'flair':
                     self.tagger = SequenceTagger.load("flair/ner-english-large")
             if ner_categories == 18:
                 if ner_library == 'stanza':
-                    self.tagger = stanza.Pipeline(lang='en', processors={'ner': 'OntoNotes'}, device='cuda:1')
+                    self.tagger = stanza.Pipeline(lang='en', processors={'ner': 'OntoNotes'}, device='cuda:0')
                 if ner_library == 'flair':
                     self.tagger = SequenceTagger.load("flair/ner-english-ontonotes-large")
         else:

@@ -5,8 +5,8 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 
-temp_dir = ""
-data_dir = ""
+temp_dir = "/home/azikre/aadil/github/narrativity-fw2/temp"
+data_dir = "/home/azikre/aadil/github/narrativity-fw2/data"
 filename = f"{data_dir}/processed_data.parquet"
 
 class TAACO_utils:
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # Run TAACO on a folder of texts ("ELLIPSE_Sample/"), give the output file a name ("packageTest.csv), provide output for particular indices/options (as defined in sampleVars)
     tu.run_TAACO(sampleVars)
 
-    df_taaco_res = pd.read_csv(f"/home/azikre/aadil/temp/runTaaco_no_name.csv")
+    df_taaco_res = pd.read_csv(f"{temp_dir}/runTaaco_no_name.csv")
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(df_taaco_res.iloc[:,1:])

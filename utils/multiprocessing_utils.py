@@ -1,6 +1,7 @@
 import concurrent.futures
 import traceback
 import pandas as pd
+import gc
 
 """
 ThreadPoolExecutor/ProcessPoolExecutor --> Executor Object:
@@ -120,7 +121,7 @@ def multicore_apply_by_chunks(df_st, func, max_chunks, max_workers = None, log_p
     for i in chunks:
         fn_specs.append((apply_on_series, {"df" : i, 'func': func}))
     
-    results, exceptions = run_in_parallel(fn_specs, threaded = False, max_workers = max_workers, log_at = 1, log_func = log_info, log_progress = log_progress)
+    results, exceptions = run_in_parallel(fn_specs, threaded = False, max_workers = max_workers, log_at = 1, log_func = print, log_progress = log_progress)
     if len(exceptions) > 0 : print(exceptions[0][2])
     results = pd.concat(i[1] for i in results)
     del chunks

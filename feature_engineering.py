@@ -1,7 +1,9 @@
 GLOBAL_SEED = 1000
-data_dir = ""
-python_venv_dir = ""
+data_dir = "/home/azikre/aadil/github/narrativity-fw2/data"
+python_venv_dir = "/home/azikre/aadil/venvs/season4"
+cohesion_model_venv_path = "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/.venv"
 filename = f"{data_dir}/processed_data.parquet"
+input_filename = f"{data_dir}/input_data.parquet"
 
 import pandas as pd
 import numpy as np
@@ -18,81 +20,98 @@ from utils.subprocessing_utils import cmd
 from utils.spacy_utils import TextStats
 from utils.connectives_utils import Connectives
 
-"""
-run gold score predictor here
-"""
+log_info = print
 
 
-df = pd.read_parquet(filename)
+if __name__ == "__main__":
+    """
+    run gold score predictor here
+    """
 
-pu = preprocessing_utils()
+    df = pd.read_parquet(input_filename)
 
-df['review_length'] = df['doc_a'].multicore_apply_by_chunks(pu.calculate_word_length, 8, 16)
+    file_for_inference_path = "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/processed_data/AIRBNB"
 
-df.to_parquet(filename, index=False)
+    df.to_json(f"{file_for_inference_path}/S4_test.jsonl", orient='records', lines=True)
 
-cmd(f"{python_venv_dir}/bin/python utils/ner_4_flair.py")
+    main_filepath = "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment"
 
-cmd(f"{python_venv_dir}/bin/python utils/ner_18_flair.py")
+    cmd(f"""
+    {cohesion_model_venv_path}/bin/python {main_filepath}/main.py --inference --arch 'vanilla' --epochs 10 --gpus 2 --corpus 'airbnb' --freeze_emb_layer --online_mode 0 --task sentence-score-prediction --checkpoint_path "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/lightning_checkpoints/gcdc-All-vanilla-sentence-score-prediction-roberta-base/epoch=9-step=16000.ckpt"
+    """)
 
-df = pd.read_parquet(filename)
+    with open("/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/dataset_processor/predictions/predictions.pkl", mode='rb') as fp:
+        gold_score_predictions = pickle.load(fp)
 
-with open("Transformer-Models-for-Text-Coherence-Assessment/dataset_processor/predictions/predictions_programmatic.pkl", mode='rb') as fp:
-    gold_score_predictions = pickle.load(fp)
+    predictions = np.concatenate([i['preds'].numpy() for i in gold_score_predictions]).ravel()
 
-predictions = np.array([i['preds'].numpy() for i in gold_score_predictions])
+    df["cohesion_score_roberta"] = predictions
 
-df["cohesion_score_roberta"] = predictions.reshape(-1, 2).ravel()
+    df['cohesion_score_roberta'] = df['cohesion_score_roberta'] / 3
 
-df['cohesion_score_roberta'] = df['cohesion_score_roberta'] / 3
+    df = df.to_parquet(filename, index=False)
 
-ts = TextStats()
+    df = pd.read_parquet(filename)
 
-df['count_adjectives'] = df['doc_a'].progress_apply(ts.count_adjectives)
-df['count_adverbs'] = df['doc_a'].progress_apply(ts.count_adverbs)
+    pu = preprocessing_utils()
 
-temporal_conn = Connectives('temporal')
-causal_conn = Connectives('causal')
-interclausal_conn = Connectives('interclausal')
+    df['review_length'] = df['doc_a'].multicore_apply_by_chunks(pu.calculate_word_length, 8, 16)
 
-df['count_temporal_connectives'] = df['doc_a'].progress_apply(temporal_conn.findall_connectives)
-df['count_causal_connectives'] = df['doc_a'].progress_apply(causal_conn.findall_connectives)
-df['count_interclausal_connectives'] = df['doc_a'].progress_apply(interclausal_conn.findall_connectives)
+    df.to_parquet(filename, index=False)
 
-df['count_unique_attributes'] = df['doc_a'].progress_apply(ts.count_unique_attributes) # Point 4.5
-df['count_unique_activites'] = df['doc_a'].progress_apply(ts.count_unique_activites) # Point 4.3
+    cmd(f"{python_venv_dir}/bin/python utils/ner_4_flair.py")
 
-ner_pu = NERProcessingUtils()
+    cmd(f"{python_venv_dir}/bin/python utils/ner_18_flair.py")
 
-df['extract_unique_loc_ner'] = df['NER_flair_4'].progress_apply(ner_pu.extract_unique_loc_ner) # Point 4.1
-df['extract_unique_per_ner'] = df['NER_flair_4'].progress_apply(ner_pu.extract_unique_per_ner) # Point 4.2
+    df = pd.read_parquet(filename)
 
-df['extract_unique_prod_ner'] = df['NER_flair_18'].progress_apply(ner_pu.extract_unique_prod_ner)
+    ts = TextStats()
 
-df['count_unique_locations'] = df['extract_unique_loc_ner'].progress_apply(len)
-df['count_unique_persons'] = df['extract_unique_per_ner'].progress_apply(len)
-df['count_unique_products'] = df['extract_unique_prod_ner'].progress_apply(len)
+    df['count_adjectives'] = df['doc_a'].progress_apply(ts.count_adjectives)
+    df['count_adverbs'] = df['doc_a'].progress_apply(ts.count_adverbs)
 
-df['extract_all_where_ner'] = df['NER_flair_4'].progress_apply(ner_pu.extract_all_where_ner) # Point 7
-df['extract_all_when_ner'] = df['NER_flair_18'].progress_apply(ner_pu.extract_all_when_ner) # Point 7
+    temporal_conn = Connectives('temporal')
+    causal_conn = Connectives('causal')
+    interclausal_conn = Connectives('interclausal')
 
-df['count_all_where_ner'] = df['extract_all_where_ner'].progress_apply(len)
-df['count_all_when_ner'] = df['extract_all_when_ner'].progress_apply(len)
+    df['count_temporal_connectives'] = df['doc_a'].progress_apply(temporal_conn.findall_connectives)
+    df['count_causal_connectives'] = df['doc_a'].progress_apply(causal_conn.findall_connectives)
+    df['count_interclausal_connectives'] = df['doc_a'].progress_apply(interclausal_conn.findall_connectives)
 
-nlp = stanza.Pipeline('en', processors = "tokenize,mwt,pos,lemma,depparse" )
+    df['count_unique_attributes'] = df['doc_a'].progress_apply(ts.count_unique_attributes) # Point 4.5
+    df['count_unique_activites'] = df['doc_a'].progress_apply(ts.count_unique_activites) # Point 4.3
 
-def count_n_subj(sentence):
-    doc = nlp(sentence)
-    sent_dict = doc.sentences[0].to_dict()
-    ct_n_subj = 0 
-    for word in sent_dict:
-#         print(word)
-        if str(word.get('deprel', 'None')) == 'nsubj':
-            ct_n_subj += 1
-    return ct_n_subj
+    ner_pu = NERProcessingUtils()
 
-df['count_sub_predicates'] = df['doc_a'].progress_apply(count_n_subj)
+    df['extract_unique_loc_ner'] = df['NER_flair_4'].progress_apply(ner_pu.extract_unique_loc_ner) # Point 4.1
+    df['extract_unique_per_ner'] = df['NER_flair_4'].progress_apply(ner_pu.extract_unique_per_ner) # Point 4.2
 
-df.to_parquet(filename, index=False)
+    df['extract_unique_prod_ner'] = df['NER_flair_18'].progress_apply(ner_pu.extract_unique_prod_ner)
 
-cmd(f"python TAACO/taaco_features.py")
+    df['count_unique_locations'] = df['extract_unique_loc_ner'].progress_apply(len)
+    df['count_unique_persons'] = df['extract_unique_per_ner'].progress_apply(len)
+    df['count_unique_products'] = df['extract_unique_prod_ner'].progress_apply(len)
+
+    df['extract_all_where_ner'] = df['NER_flair_4'].progress_apply(ner_pu.extract_all_where_ner) # Point 7
+    df['extract_all_when_ner'] = df['NER_flair_18'].progress_apply(ner_pu.extract_all_when_ner) # Point 7
+
+    df['count_all_where_ner'] = df['extract_all_where_ner'].progress_apply(len)
+    df['count_all_when_ner'] = df['extract_all_when_ner'].progress_apply(len)
+
+    nlp = stanza.Pipeline('en', processors = "tokenize,mwt,pos,lemma,depparse" )
+
+    def count_n_subj(sentence):
+        doc = nlp(sentence)
+        sent_dict = doc.sentences[0].to_dict()
+        ct_n_subj = 0 
+        for word in sent_dict:
+    #         print(word)
+            if str(word.get('deprel', 'None')) == 'nsubj':
+                ct_n_subj += 1
+        return ct_n_subj
+
+    df['count_sub_predicates'] = df['doc_a'].progress_apply(count_n_subj)
+
+    df.to_parquet(filename, index=False)
+
+    cmd(f"cd TAACO/ && python taaco_features.py && cd ..")

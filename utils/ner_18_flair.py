@@ -4,7 +4,7 @@ from preprocessing_utils import (preprocessing_utils,
 from tqdm import tqdm
 tqdm.pandas()
 
-data_dir = ""
+data_dir = "/home/azikre/aadil/github/narrativity-fw2/data"
 
 if __name__ == "__main__":
 
@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     print(f"Reading File :: {filename}")
 
-    df = pd.read_parquet(filename, lines=True)
+    df = pd.read_parquet(filename)
 
     pu = preprocessing_utils(ner_categories = 18, ner_library = 'flair', enable_ner = True)
     
@@ -20,4 +20,4 @@ if __name__ == "__main__":
 
     print(f"Writing File :: {filename}")
     
-    df = df.to_parquet(filename, lines=True)
+    df = df.to_parquet(filename, index=False)
