@@ -1,4 +1,6 @@
 GLOBAL_SEED = 1000
+LOGGER_NAME = 'feature_engg.py'
+
 data_dir = "/home/azikre/aadil/github/narrativity-fw2/data"
 python_venv_dir = "/home/azikre/aadil/venvs/season4"
 cohesion_model_venv_path = "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/.venv"
@@ -19,8 +21,10 @@ import utils.multiprocessing_utils
 from utils.subprocessing_utils import cmd
 from utils.spacy_utils import TextStats
 from utils.connectives_utils import Connectives
+from utils.file_logger import *
 
-log_info = print
+log_file_loc = '/home/azikre/aadil/github/narrativity-fw2/tmp.log'
+init_logger(log_file_loc)
 
 
 if __name__ == "__main__":
@@ -29,6 +33,9 @@ if __name__ == "__main__":
     """
 
     df = pd.read_parquet(input_filename)
+    log_info(df.head())
+
+    log_info("Starting Cohesion Features Extraction")
 
     file_for_inference_path = "/home/azikre/aadil/github/Transformer-Models-for-Text-Coherence-Assessment/processed_data/AIRBNB"
 
@@ -51,13 +58,19 @@ if __name__ == "__main__":
 
     df = df.to_parquet(filename, index=False)
 
+    log_info("Cohesion Features Extracted!")
+
     df = pd.read_parquet(filename)
 
     pu = preprocessing_utils()
 
+    log_info("Calculating Review Length!")
+
     df['review_length'] = df['doc_a'].multicore_apply_by_chunks(pu.calculate_word_length, 8, 16)
 
     df.to_parquet(filename, index=False)
+
+    log_info("Review Length Calculated")
 
     cmd(f"{python_venv_dir}/bin/python utils/ner_4_flair.py")
 
@@ -67,16 +80,26 @@ if __name__ == "__main__":
 
     ts = TextStats()
 
+    log_info("Calculating Adjectives and Adverbs!")
+
     df['count_adjectives'] = df['doc_a'].progress_apply(ts.count_adjectives)
     df['count_adverbs'] = df['doc_a'].progress_apply(ts.count_adverbs)
+
+    log_info("Calculation of Adjectives and Adverbs done!")
 
     temporal_conn = Connectives('temporal')
     causal_conn = Connectives('causal')
     interclausal_conn = Connectives('interclausal')
 
+    log_info("Calculating Connectives!")
+    
     df['count_temporal_connectives'] = df['doc_a'].progress_apply(temporal_conn.findall_connectives)
     df['count_causal_connectives'] = df['doc_a'].progress_apply(causal_conn.findall_connectives)
     df['count_interclausal_connectives'] = df['doc_a'].progress_apply(interclausal_conn.findall_connectives)
+
+    log_info("Calculation of Connectives Done!")
+
+    log_info("Calculating Unique Attributes!")
 
     df['count_unique_attributes'] = df['doc_a'].progress_apply(ts.count_unique_attributes) # Point 4.5
     df['count_unique_activites'] = df['doc_a'].progress_apply(ts.count_unique_activites) # Point 4.3
@@ -98,7 +121,11 @@ if __name__ == "__main__":
     df['count_all_where_ner'] = df['extract_all_where_ner'].progress_apply(len)
     df['count_all_when_ner'] = df['extract_all_when_ner'].progress_apply(len)
 
+    log_info("Calculation of Unique Attributes Done!")
+    
     nlp = stanza.Pipeline('en', processors = "tokenize,mwt,pos,lemma,depparse" )
+
+    log_info("Calculating Subject Predicates!")
 
     def count_n_subj(sentence):
         doc = nlp(sentence)
@@ -111,6 +138,8 @@ if __name__ == "__main__":
         return ct_n_subj
 
     df['count_sub_predicates'] = df['doc_a'].progress_apply(count_n_subj)
+
+    log_info("Calcution of Subject Predicates Done!")
 
     df.to_parquet(filename, index=False)
 

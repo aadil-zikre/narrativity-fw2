@@ -1,17 +1,23 @@
+LOGGER_NAME = "taaco_features.py"
+
 import pandas as pd
 from TAACOnoGUI import runTAACO
 from subprocessing_utils import cmd
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from file_logger import *
 import matplotlib.pyplot as plt
 
 temp_dir = "/home/azikre/aadil/github/narrativity-fw2/temp"
 data_dir = "/home/azikre/aadil/github/narrativity-fw2/data"
 filename = f"{data_dir}/processed_data.parquet"
 
+log_file_loc = '/home/azikre/aadil/github/narrativity-fw2/tmp.log'
+init_logger(log_file_loc)
+
 class TAACO_utils:
     def __init__(self):
-        print("init TAACO utils")
+        log_info("init TAACO utils")
         
     def save_df_rows(self,df, id_col, text_col):
         cmd(f"rm {temp_dir}/airbnb_reviews/*.txt")
@@ -24,7 +30,7 @@ class TAACO_utils:
             raise NotImplementedError("Pass SampleVars. Default not defined.")
         
         runTAACO(f"{temp_dir}/airbnb_reviews/", f"{temp_dir}/{save_as}", sampleVars)
-        print(f"TAACO finished Running. Results saved at: {temp_dir}/{save_as}")
+        log_info(f"TAACO finished Running. Results saved at: {temp_dir}/{save_as}")
 
 if __name__ == "__main__":
 
@@ -62,7 +68,7 @@ if __name__ == "__main__":
     'outputDiagnostic': False}
 
     # Run TAACO on a folder of texts ("ELLIPSE_Sample/"), give the output file a name ("packageTest.csv), provide output for particular indices/options (as defined in sampleVars)
-    tu.run_TAACO(sampleVars)
+    # tu.run_TAACO(sampleVars)
 
     df_taaco_res = pd.read_csv(f"{temp_dir}/runTaaco_no_name.csv")
 
@@ -98,7 +104,10 @@ if __name__ == "__main__":
 
     pca_df.insert(0, 'review_id', df_taaco_res['Filename'])
 
-    pca_df['review_id'] = pca_df.review_id.apply(lambda x : int(x.split(".")[0].split("_")[1]))
+    try:
+        pca_df['review_id'] = pca_df.review_id.apply(lambda x : int(x.split(".")[0].split("_")[1]))
+    except:
+        pca_df['review_id'] = pca_df.review_id.apply(lambda x : "_".join(x.split(".")[0].split("_")[1:])) 
 
     df = df.merge(pca_df, on='review_id', how='left', copy=False)
 

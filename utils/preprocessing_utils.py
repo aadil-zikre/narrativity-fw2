@@ -2,6 +2,7 @@ import nltk
 import stanza
 from flair.data import Sentence
 from flair.models import SequenceTagger
+from file_logger import *
 from tqdm import tqdm
 tqdm.pandas()
 
